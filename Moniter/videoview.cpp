@@ -203,9 +203,9 @@ Mat videoview::moveDetect(Mat diff, Mat frame)
              
       putText(result,"Car Number:"+intToString(CarNum),Point(1500,100), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
 	  if(red_light==true)
-		  putText(result, "red light",Point(400,100), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(255, 0, 0), 3);
+		  putText(result, "red light",Point(1500,200), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(255, 0, 0), 3);
 	  else if (red_light == false)
-		  putText(result, "green light", Point(400, 100), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
+		  putText(result, "green light", Point(1500, 200), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
 	  line(result, Point(500, 650), Point(1550, 650), Scalar(0, 0, 255), 3, 8);//»­ºìÏß
 	  //line(result,hori_1,hori_2,Scalar(0,0,255),3);
 	  if(is_judge==true){
@@ -234,7 +234,7 @@ bool videoview::savetodb(Mat img, QString url)
 	QString date = current_date_time.toString("yyyy-MM-dd hh:mm:ss");
 	url=url + current_date_time.toString("yyyyMMddhhmmss") + ".jpg";
 	imwrite("F://´ó´´/"+url.toStdString(),img);
-	db.exec("INSERT INTO car_info (licence_id,url,time) VALUES('12345','"+url+"','"+date+"')");
+	db.exec("INSERT INTO car_info (license_id,url,time) VALUES('12345','"+url+"','"+date+"')");
 	return false;
 }
 
@@ -267,8 +267,8 @@ int videoview::car_numbercount(int x0, int y0, int w0, int h0)
 			savetodb(image_roi, url);
 			if (red_light == true) {
 				 url = "pictures/illegals/run_redlights/";
-				 savetodb(image_roi, url);
-				 putText(result, "´³ºìµÆ" , Point(x0, y0), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
+				 savetodb_illegal(image_roi, url,QStringLiteral("run redlight"));
+				 //putText(result, "´³ºìµÆ" , Point(x0, y0), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
 			}
 			centers.push_back(center);
 		}
@@ -333,7 +333,8 @@ int videoview::car_legaljudge(int x0, int y0, int w0, int h0)
 					 //qmb.warning(this,"",QString::number(x0,10)+QStringLiteral(" y:")+QString::number(y0,10)+QString::number(x0+w0,10)+" "+QString::number(y0+h0,10),QMessageBox::Yes);
 					 Mat img=frame.clone();
                      Mat image_roi = img(rect);
-					 savetodb_illegal(image_roi);
+					 QString url = "pictures/illegals/cross_lane/";
+					 savetodb_illegal(image_roi,url,QStringLiteral("cross lane"));
 					 illegalcenters.push_back(center);
 
 					 //putText(result,"x:"+intToString(center.x)+"y"+intToString(center.y),Point(1500,200), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
@@ -422,13 +423,17 @@ void videoview::on_cross_lane_clicked(void)
 }
 
 
-void videoview::savetodb_illegal(Mat img)
+void videoview::savetodb_illegal(Mat img,QString url,QString type)
 {
 	QDateTime current_date_time =QDateTime::currentDateTime();
-	QString url="D://pictures/img"+current_date_time.toString("yyyyMMddhhmmss")+".jpg";
+	url=url+current_date_time.toString("yyyyMMddhhmmss")+".jpg";
 	QString date=current_date_time.toString("yyyy-MM-dd hh:mm:ss");
-	imwrite(url.toStdString(),img);
-	db.exec("INSERT INTO car_crossline (licence_id,url,time) VALUES('12345','"+url+"','"+date+"')");
+	imwrite("F://´ó´´/" + url.toStdString(), img);
+	db.exec("INSERT INTO illegals (license_id,url,time,type) VALUES('12345','"+url+"','"+date+"','"+type+"')");
+	QString instruct = "INSERT INTO illegals (license_id,url,time,type) VALUES('12345','" + url + "','" + date + "','" + type + "')";
+	QMessageBox qmb;
+	qmb.warning(this, "",instruct , QMessageBox::Yes);
+
 }
 
 

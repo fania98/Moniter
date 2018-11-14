@@ -63,10 +63,6 @@ public:
         change_light->setGeometry(QRect(870, 790, 93, 28));
 
         retranslateUi(videoviewClass);
-        QObject::connect(calculate_cars, SIGNAL(clicked()), videoviewClass, SLOT(on_pushbutton_2_clicked()));
-        QObject::connect(lane_finder, SIGNAL(clicked()), videoviewClass, SLOT(on_pushbutton_3_clicked()));
-        QObject::connect(cross_lane, SIGNAL(clicked()), videoviewClass, SLOT(on_pushbutton_4_clicked()));
-        QObject::connect(change_light, SIGNAL(clicked()), videoviewClass, SLOT(on_change_light_clicked()));
 
         QMetaObject::connectSlotsByName(videoviewClass);
     } // setupUi

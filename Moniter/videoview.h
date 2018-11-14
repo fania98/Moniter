@@ -72,7 +72,7 @@ public:
 	int car_legaljudge(int x0, int y0, int w0, int h0);
 	int threadDetect(Mat frame);
 	double getlength(Point p1, Point p2);
-	void savetodb_illegal(Mat img);
+	void savetodb_illegal(Mat img, QString url, QString type);
 	int savetodb_line(Point point1, Point point2);
 	
 };

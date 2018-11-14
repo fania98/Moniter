@@ -122,72 +122,7 @@
  <resources>
   <include location="videoview.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>calculate_cars</sender>
-   <signal>clicked()</signal>
-   <receiver>videoviewClass</receiver>
-   <slot>on_pushbutton_2_clicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>540</x>
-     <y>255</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>299</x>
-     <y>199</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lane_finder</sender>
-   <signal>clicked()</signal>
-   <receiver>videoviewClass</receiver>
-   <slot>on_pushbutton_3_clicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1001</x>
-     <y>838</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>988</x>
-     <y>868</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cross_lane</sender>
-   <signal>clicked()</signal>
-   <receiver>videoviewClass</receiver>
-   <slot>on_pushbutton_4_clicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1035</x>
-     <y>868</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>939</x>
-     <y>866</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>change_light</sender>
-   <signal>clicked()</signal>
-   <receiver>videoviewClass</receiver>
-   <slot>on_change_light_clicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>886</x>
-     <y>801</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>804</x>
-     <y>882</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>on_openfile_clicked()</slot>
   <slot>on_pushbutton_2_clicked()</slot>
