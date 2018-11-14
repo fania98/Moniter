@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>videoviewClass</class>
+ <widget class="QWidget" name="videoviewClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1130</width>
+    <height>896</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>videoview</string>
+  </property>
+  <widget class="QPushButton" name="openfile">
+   <property name="geometry">
+    <rect>
+     <x>980</x>
+     <y>730</y>
+     <width>101</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>打开视频</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>480</x>
+     <y>670</y>
+     <width>361</width>
+     <height>191</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="calculate_cars">
+   <property name="geometry">
+    <rect>
+     <x>980</x>
+     <y>770</y>
+     <width>101</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>车流量统计</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>20</y>
+     <width>1031</width>
+     <height>601</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>670</y>
+     <width>351</width>
+     <height>211</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="lane_finder">
+   <property name="geometry">
+    <rect>
+     <x>980</x>
+     <y>810</y>
+     <width>101</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>车道检测</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="cross_lane">
+   <property name="geometry">
+    <rect>
+     <x>980</x>
+     <y>850</y>
+     <width>101</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>不按车道行驶</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="change_light">
+   <property name="geometry">
+    <rect>
+     <x>870</x>
+     <y>790</y>
+     <width>93</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>设置为红灯</string>
+   </property>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="videoview.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>calculate_cars</sender>
+   <signal>clicked()</signal>
+   <receiver>videoviewClass</receiver>
+   <slot>on_pushbutton_2_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>540</x>
+     <y>255</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lane_finder</sender>
+   <signal>clicked()</signal>
+   <receiver>videoviewClass</receiver>
+   <slot>on_pushbutton_3_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1001</x>
+     <y>838</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>988</x>
+     <y>868</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cross_lane</sender>
+   <signal>clicked()</signal>
+   <receiver>videoviewClass</receiver>
+   <slot>on_pushbutton_4_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1035</x>
+     <y>868</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>939</x>
+     <y>866</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>change_light</sender>
+   <signal>clicked()</signal>
+   <receiver>videoviewClass</receiver>
+   <slot>on_change_light_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>886</x>
+     <y>801</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>804</x>
+     <y>882</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>on_openfile_clicked()</slot>
+  <slot>on_pushbutton_2_clicked()</slot>
+  <slot>on_pushbutton_3_clicked()</slot>
+  <slot>on_pushbutton_4_clicked()</slot>
+  <slot>on_change_light_clicked()</slot>
+ </slots>
+</ui>
