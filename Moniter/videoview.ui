@@ -55,7 +55,7 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>30</x>
      <y>20</y>
      <width>1031</width>
      <height>601</height>
@@ -68,8 +68,8 @@
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>670</y>
+     <x>80</x>
+     <y>650</y>
      <width>351</width>
      <height>211</height>
     </rect>
@@ -104,17 +104,47 @@
     <string>不按车道行驶</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="change_light">
+  <widget class="QComboBox" name="light_kind">
    <property name="geometry">
     <rect>
      <x>870</x>
-     <y>790</y>
-     <width>93</width>
-     <height>28</height>
+     <y>750</y>
+     <width>101</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>可通行</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>仅可直行</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>仅可左转</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>不可通行</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>870</x>
+     <y>730</y>
+     <width>72</width>
+     <height>15</height>
     </rect>
    </property>
    <property name="text">
-    <string>设置为红灯</string>
+    <string>通行状态</string>
    </property>
   </widget>
  </widget>
@@ -122,12 +152,30 @@
  <resources>
   <include location="videoview.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>light_kind</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>videoviewClass</receiver>
+   <slot>on_light_kind_changed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>913</x>
+     <y>758</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>878</x>
+     <y>820</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <slots>
   <slot>on_openfile_clicked()</slot>
   <slot>on_pushbutton_2_clicked()</slot>
   <slot>on_pushbutton_3_clicked()</slot>
   <slot>on_pushbutton_4_clicked()</slot>
   <slot>on_change_light_clicked()</slot>
+  <slot>on_light_kind_changed()</slot>
  </slots>
 </ui>

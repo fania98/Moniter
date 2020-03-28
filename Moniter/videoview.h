@@ -15,13 +15,20 @@
 #include<qdatetime.h>
 #include <Windows.h>
 #include "linefinder.h"
+#include "myftp.h"
 
 
 #include <QSqlQuery>  
 #include <QVariant>  
 #include <QDebug>  
 #include <QtSql>  
-#include <QSqlError>  
+#include <QSqlError> 
+#include <stdlib.h>
+#include <stdio.h>
+#include <signal.h>
+#include "carObject.h"
+
+
 using namespace cv;
 
 class videoview : public QWidget
@@ -40,7 +47,7 @@ public:
 	QTimer *timer;
 	int CarNum;
 	CvFont font;
-	std::vector<Point> centers;
+	std::vector<carObject> cars;
 	std::vector<Point> illegalcenters;
 	Range R1,R2;
 	bool is_judge;
@@ -51,6 +58,9 @@ public:
 	 bool is_scaned;
 	 bool crosslane_judge;
 	 bool red_light = false;
+	 string lightstatus="pass";
+	 int light_state = 0;
+	 myftp mf;
 private:
 	Ui::videoviewClass ui;
 private slots:
@@ -62,14 +72,15 @@ private slots:
 	Mat moveDetect(Mat frame1, Mat frame2);
 	Mat BinaryDetect(Mat frame1, Mat frame2);
     void on_cross_lane_clicked(void);
-	void on_change_light_clicked();
+	//void on_change_light_clicked();
+	void on_light_kind_changed();
 public:
 	QImage Mat2QImage(Mat cvImg);
 	std::string intToString(int number);
 	
 	bool savetodb(Mat img,QString url);
 	int car_numbercount(int x0, int y0, int w0, int h0);
-	int car_legaljudge(int x0, int y0, int w0, int h0);
+	int car_legaljudge(int x0, int y0, int w0, int h0,int j);
 	int threadDetect(Mat frame);
 	double getlength(Point p1, Point p2);
 	void savetodb_illegal(Mat img, QString url, QString type);

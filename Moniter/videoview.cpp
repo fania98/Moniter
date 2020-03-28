@@ -1,27 +1,29 @@
 #include "videoview.h"
+#include <qdebug.h>
 
 videoview::videoview(QWidget *parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
+	
 	cvInitFont(&font,CV_FONT_HERSHEY_COMPLEX,1.0,1.0,0,2,8);
 	CarNum=0;
 	is_judge=false;
 	crosslane_judge=true;
 	timer=new QTimer(this);
 	db=QSqlDatabase::addDatabase ("QODBC"); 
-	db.setDatabaseName("mysql");
-	db.setHostName("192.168.43.250");
+	db.setDatabaseName("monitor");
+	db.setHostName("fifi");
 	if(!db.open ())  
     {  
         QMessageBox qmb;
 	    qmb.warning(this,"",QStringLiteral("fail"),QMessageBox::Yes);
-    }  
+    }
 }
 
 videoview::~videoview()
 {
-
+	
 }
 
 
@@ -33,7 +35,7 @@ void videoview::on_openfile_clicked(void) //打开视频
 	is_judge=false;
 	crosslane_judge=false;
 	QString fileName;
-	fileName=QFileDialog::getOpenFileName(this,"Open video File","F://大创","*.*");
+	fileName=QFileDialog::getOpenFileName(this,"Open video File","../video","*.*");
 	timer->stop();
 	
 	capture.open(fileName.toStdString());
@@ -101,9 +103,6 @@ QImage videoview::Mat2QImage(Mat cvImg)
 }
 
 void videoview::on_calculate_cars_clicked(){
-	QMessageBox qmb;
-	
-	
 	if(capture.isOpened()) {
 		timer->stop();
 		double rate= capture.get(CV_CAP_PROP_FPS);//获取帧速率
@@ -140,13 +139,10 @@ Mat videoview::BinaryDetect(Mat frame1, Mat frame2)
 	 threshold(diff, diff, 25, 255, CV_THRESH_BINARY);//图象二值化
 	 Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
      Mat element2 = getStructuringElement(MORPH_RECT, Size(19, 19));
-	 medianBlur(diff, diff, 3);//中值滤波
-	 erode(diff, diff, element);
+	 medianBlur(diff, diff, 9);//中值滤波
+	 
 	 dilate(diff, diff, element2,Point(-1,-1),2);
 	 erode(diff, diff, element,Point(-1,-1),2);
-	 
-     
-	 //dilate(diff,diff,element2);
 	 return diff;
  }
 
@@ -184,32 +180,44 @@ Mat videoview::moveDetect(Mat diff, Mat frame)
     findContours(diff, contours, hierarcy, CV_RETR_EXTERNAL,  CV_CHAIN_APPROX_SIMPLE, Point(0, 0));//查找轮廓,此处diff被涂改
     std::vector<std::vector<Point>>contours_poly(contours.size());
     std::vector<Rect> boundRect(contours.size()); //定义外接矩形集合
-                                           //drawContours(img2, contours, -1, Scalar(0, 0, 255), 1, 8);  //绘制轮廓
      int x0 = 0, y0 = 0, w0 = 0, h0 = 0;
      for (int i = 0; i<contours.size(); i++)
      {
-         approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);//对图像轮廓点进行多边形拟合：轮廓点组成的点集，输出的多边形点集，精度（即两个轮廓点之间的距离），输出多边形是否封闭
+		 //对图像轮廓点进行多边形拟合：轮廓点组成的点集，输出的多边形点集，精度（即两个轮廓点之间的距离），输出多边形是否封闭
+         approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
          boundRect[i] = boundingRect(Mat(contours_poly[i]));
-         if (boundRect[i].width>150 && boundRect[i].width<800 && boundRect[i].height>200 && boundRect[i].height<800) {//轮廓筛选
+         if (boundRect[i].width>100 && boundRect[i].width<800 && boundRect[i].height>100 && boundRect[i].height<800) {//轮廓筛选
              x0 = boundRect[i].x;
              y0 = boundRect[i].y;
              w0 = boundRect[i].width;
              h0 = boundRect[i].height;
              rectangle(result, Point(x0, y0), Point(x0 + w0, y0 + h0), Scalar(0, 255, 0), 2, 8, 0);
+
 			 car_numbercount(x0,y0,w0,h0);
-			 if(crosslane_judge==true) car_legaljudge(x0,y0,w0,h0);
+//if(crosslane_judge==true) car_legaljudge(x0,y0,w0,h0);
 		 }
 	 }
              
       putText(result,"Car Number:"+intToString(CarNum),Point(1500,100), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
-	  if(red_light==true)
-		  putText(result, "red light",Point(1500,200), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(255, 0, 0), 3);
+
+	  //运动轨迹
+	  for (int i = 0; i < cars.size(); i++) {
+		   for (int j = 0; j < cars[i].centers.size() - 1; j++) {
+			   //qDebug() << "line" << endl;
+			   line(result, cars[i].centers[j], cars[i].centers[j+1], 
+				   cars[i].is_runRedLight||cars[i].is_cross?Scalar(0, 0, 255):Scalar(0,255,0), 3, 8);
+			}
+		  
+	  }
+
+	  /*if(red_light==true)
+		  putText(result, "red light",Point(1500,200), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 0, 255), 3);
 	  else if (red_light == false)
-		  putText(result, "green light", Point(1500, 200), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
+		  putText(result, "green light", Point(1500, 200), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);*/
+	  putText(result, lightstatus.c_str(), Point(1500, 200), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
+
 	  line(result, Point(500, 650), Point(1550, 650), Scalar(0, 0, 255), 3, 8);//画红线
-	  //line(result,hori_1,hori_2,Scalar(0,0,255),3);
 	  if(is_judge==true){
-         //line(result,Point(580,650),Point(300,1200),Scalar(0,0,255),3,8);
 		  for(int j=0;j<verti.size();j+=2){
 			  line(result,verti[j],verti[j+1],Scalar(0,0,255),3);
 			  savetodb_line(verti[j],verti[j+1]);
@@ -232,31 +240,59 @@ bool videoview::savetodb(Mat img, QString url)
 {
 	QDateTime current_date_time = QDateTime::currentDateTime();
 	QString date = current_date_time.toString("yyyy-MM-dd hh:mm:ss");
+	std::string name = current_date_time.toString("yyyyMMddhhmmss").toStdString() + ".jpg";
+	imwrite("../" + url.toStdString() + name, img);
+	bool is_fail = false;
+	/*string pre = "python F://dachuang/lic_re/PR.py ";
+	const char *com = (pre+"F:/monitor/" + url.toStdString() + name).c_str();
+	
+	printf("%s\n",com);
+	
+	FILE *fp;
+	fp = _popen(com, "w");
+	if (fp == NULL) {
+
+		is_fail = true;
+		printf("%s\n", "fail");
+
+	}
+	_pclose(fp);*/
+	
+	//ifstream fin("../lic_re/rere.txt");
+	string nResult;
+	//if (!is_fail) {
+		//getline(fin, nResult);
+	//}
+	//else {
+		nResult = "12345";
+	//}
+	//std::cout << nResult.size();
+	//fin.close();
+	mf.upload(url.toStdString(),name);
 	url=url + current_date_time.toString("yyyyMMddhhmmss") + ".jpg";
-	imwrite("F://大创/"+url.toStdString(),img);
-	db.exec("INSERT INTO car_info (license_id,url,time) VALUES('12345','"+url+"','"+date+"')");
+	QString l = QString::fromStdString(nResult);
+	db.exec("INSERT INTO car_info (license_id,picture_url,action_time) VALUES('"+l+"','"+url+"','"+date+"')");
 	return false;
 }
 
 
 int videoview::car_numbercount(int x0, int y0, int w0, int h0)
-{
-	
-	if ((y0 + h0 / 2 + 1) >= 600 && (y0 + h0 / 2 - 1) <= 700 && (x0 >= 500) && (x0 <= 1500) && w0 >= 200 && x0 >= 200) {//经过这条线（区间），车辆数量+1
-		if (centers.size() >= 3) centers.erase(centers.begin());
+{	
+	if ((y0 + h0 / 2 + 1) >= 550 && (y0 + h0 / 2 - 1) <= 900 && (x0 >= 200) && (x0 <= 1500) && 
+			w0 >= 180 && h0 >= 180) {//经过这个区间，车辆数量+1
 		Point center = Point(x0 + w0 / 2, y0 + h0 / 2);
 		bool isCalcued = false;
-		for (int j = 0; j < centers.size(); j++) {
+		for (int j = 0; j < cars.size(); j++) {
 
-			ui.label_3->setText(QString::number(centers.size(), 10) + " " + QString::number(centers[j].x, 10) + " " + QString::number(centers[j].y, 10));
-			if ((std::abs(center.y - centers[j].y) <= 30) && (std::abs(center.x - centers[j].x) <= 50)) {
+			//qDebug()<<j<<" "<<cars[j].centers.back().x<<" "<<cars[j].centers.back().y;
+			if ((std::abs(center.y - cars[j].centers.back().y) <= 150) 
+				&& (std::abs(center.x - cars[j].centers.back().x) <= 100)) {
 				isCalcued = true;
-				centers[j].y = center.y;
-				centers[j].x = center.x;
+				cars[j].centers.push_back(center);
+				cars[j].centers.push_back(center);
+				car_legaljudge(x0, y0, w0, h0, j);
 				break;
 			}
-			else if (centers[j].y <= 620) centers.erase(centers.begin() + j);
-
 		}
 		if (isCalcued == false) {
 			CarNum++;
@@ -264,18 +300,23 @@ int videoview::car_numbercount(int x0, int y0, int w0, int h0)
 			Mat img = frame.clone();
 			Mat image_roi = img(rect);
 			QString url = "pictures/car_count/";
+			printf("%d %d %d %d\n", x0, y0, w0, h0);
 			savetodb(image_roi, url);
-			if (red_light == true) {
-				 url = "pictures/illegals/run_redlights/";
-				 savetodb_illegal(image_roi, url,QStringLiteral("run redlight"));
-				 //putText(result, "闯红灯" , Point(x0, y0), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
-			}
-			centers.push_back(center);
+			carObject car;
+			car.centers.push_back(center);
+			cars.push_back(car);
 		}
 	}
-        
-         //putText(result, "CarNum=" + intToString(CarNum), org, CV_FONT_HERSHEY_SIMPLEX, 0.8f, Scalar(0, 255, 0), 2);
-	  
+	else {
+		for (int j = 0; j < cars.size(); j++) {
+			Point center = Point(x0 + w0 / 2, y0 + h0 / 2);
+			if ((std::abs(center.y - cars[j].centers.back().y) <= 150) 
+				&& (std::abs(center.x - cars[j].centers.back().x) <= 100)) {
+				cars.erase(cars.begin() + j);
+				break;
+			}
+		}
+	} 
 	return 0;
 }
 
@@ -283,64 +324,72 @@ int videoview::car_numbercount(int x0, int y0, int w0, int h0)
 void videoview::on_lane_finder_clicked(void)
 {
     is_judge=true;
-	//if(is_scaned==false){
-	//threadDetect(frame);
-	//}
-	//is_scaned=false;
-	verti.clear();
-	Point pt1,pt2,pt3,pt4,pt5,pt6;
-	pt1.x=625;pt1.y=655;
-	verti.push_back(pt1);
-	pt2.x=462;pt2.y=1079;
-	verti.push_back(pt2);
-	pt3.x=1072;pt3.y=655;
-	verti.push_back(pt3);
-	pt4.x=1239;pt4.y=1079;
-	verti.push_back(pt4);
+	if(is_scaned==false){
+		threadDetect(frame);
+	}
+	else {
+		is_scaned = false;
+		verti.clear();
+		Point pt1, pt2, pt3, pt4, pt5, pt6;
+		pt1.x = 625; pt1.y = 655;
+		verti.push_back(pt1);
+		pt2.x = 462; pt2.y = 1079;
+		verti.push_back(pt2);
+		pt3.x = 1072; pt3.y = 655;
+		verti.push_back(pt3);
+		pt4.x = 1239; pt4.y = 1079;
+		verti.push_back(pt4);
+	}
 	
 }
 
 
-int videoview::car_legaljudge(int x0, int y0, int w0, int h0)
+int videoview::car_legaljudge(int x0, int y0, int w0, int h0,int j)
 {
-	QMessageBox qmb;
-	//qmb.warning(this,"",QString::number(x0,10)+QStringLiteral(" y:")+QString::number(y0,10)+QString::number(x0+w0,10)+" "+QString::number(y0+h0,10),QMessageBox::Yes);
-	bool isCalcued=true;
-	Point center;
-	for(int i=0;i<verti.size();i+=2){ //遍历检查是否越线
-		if(x0+250<((verti[i].x+verti[i+1].x)/2)&&x0+w0-30>((verti[i].x+verti[i+1].x)/2)&&(y0+h0>verti[i].y)){
-			//qmb.warning(this,"",QStringLiteral("越线"),QMessageBox::Yes);
-			 if(illegalcenters.size()>=4) illegalcenters.erase(illegalcenters.begin());
-				 center=Point(x0+w0/2,y0+h0/2); //若越线记录车辆中点坐标
-				 isCalcued=false;
-				 for(int j=0;j<illegalcenters.size();j++){ //检查是否已被记录
-					  //ui.label_3->setText(QString::number(centers.size(),10)+" "+QString::number(centers[j].x,10)+" "+QString::number(centers[j].y,10));
-					 if((std::abs(center.y-illegalcenters[j].y)<=60)&&(std::abs(center.x-illegalcenters[j].x)<=80)){
-						 isCalcued=true;
-						 illegalcenters[j].y=center.y;
-						 illegalcenters[j].x=center.x;
-						 break;
-					 }
-					 else if(illegalcenters[j].y<=620) illegalcenters.erase(illegalcenters.begin()+j);
-					 
-				 }
+	//闯红灯判断
+	int centersize = cars[j].centers.size();
+	bool is_legal = true;
+	switch (light_state) {
+		case 0:
+			break;
+		case 1://仅允许直行
+			if ((cars[j].centers[0].x-x0>100)&&(x0<650)&&(y0 + h0 / 2) <= 700 && (y0 + h0 / 2) >= 600 ) {
+				is_legal = false;
+			}
+			break;
+		case 2://仅允许左转
+			if ((y0 + h0 / 2) <= 700 && (y0 + h0 / 2) >= 600 && x0 >= 300) {
+				is_legal = false;
+			}
+			break;
+		case 3://不许通行
+			if ((y0 + h0 / 2) <= 700 && (y0 + h0 / 2) >= 600 && x0 <= 1500) {
+				is_legal = false;
+			}
+			break;
+	}
+	if (is_legal==false && cars[j].is_runRedLight == false) {
+		cars[j].is_runRedLight = true;
+		Rect rect(x0 - 50, y0 - 50, w0 + 50, h0 + 50);
+		Mat img = frame.clone();
+		Mat image_roi = img(rect);
+		QString url = "pictures/illegals/run_redlights/";
+		savetodb_illegal(image_roi, url, QStringLiteral("run redlight"));
+	}
+//越线判断
+	if (crosslane_judge == true) {
+		for (int i = 0; i < verti.size(); i += 2) { //遍历检查是否越线
+			if (x0 + 250 < ((verti[i].x + verti[i + 1].x) / 2) && x0 + w0 - 30 > ((verti[i].x + verti[i + 1].x) / 2)
+				&& (y0 + h0 > verti[i].y) && cars[j].is_cross == false) {
+				cars[j].is_cross = true;
+				Rect rect(x0 - 50, y0 - 50, w0 + 50, h0 + 50);
+				Mat img = frame.clone();
+				Mat image_roi = img(rect);
+				QString url = "pictures/illegals/cross_lane/";
+				savetodb_illegal(image_roi, url, QStringLiteral("cross line"));
+			}
 		}
 	}
-                 if(isCalcued==false) {
-					 Rect rect(x0-50, y0-50,w0+50,h0+50);
-					 //ui.label_3->setText(" "+QString::number(x0,10)+" "+QString::number(y0,10)+QString::number(x0+w0,10)+" "+QString::number(y0+h0,10));
-					 //QMessageBox qmb;
-					 //qmb.warning(this,"",QString::number(x0,10)+QStringLiteral(" y:")+QString::number(y0,10)+QString::number(x0+w0,10)+" "+QString::number(y0+h0,10),QMessageBox::Yes);
-					 Mat img=frame.clone();
-                     Mat image_roi = img(rect);
-					 QString url = "pictures/illegals/cross_lane/";
-					 savetodb_illegal(image_roi,url,QStringLiteral("cross lane"));
-					 illegalcenters.push_back(center);
-
-					 //putText(result,"x:"+intToString(center.x)+"y"+intToString(center.y),Point(1500,200), CV_FONT_HERSHEY_SIMPLEX, 1.5f, Scalar(0, 255, 0), 3);
-					 //QMessageBox qmb;
-					 //qmb.warning(this,"",QString::number(center.x,10)+QStringLiteral(" y:")+QString::number(center.y,10),QMessageBox::Yes);
-                  }
         
 
 	return 0;
@@ -357,13 +406,9 @@ int videoview::threadDetect(Mat frame)
      Mat element2 = getStructuringElement(MORPH_RECT, Size(19, 19));
 	  medianBlur(gray, gray, 3);//中值滤波
 	 erode(gray, gray, element);
-	 //dilate(gray, gray, element2,Point(-1,-1),1);
 	 erode(gray, gray, element,Point(-1,-1),2);
-	 //Canny(frame, gray, 350, 400); 
 	 finder.setLengthAndGap(250, 15);  
      finder.setminVote(60);  
-     //Mat contours;  
-     //Canny(gray, contours, 350, 400);  
      std::vector<Vec4i> lines = finder.findLines(gray); 
 	 std::vector<Vec4i>::const_iterator it = lines.begin();  
         while (it!=lines.end())  
@@ -372,7 +417,6 @@ int videoview::threadDetect(Mat frame)
             cv::Point pt2((*it)[2], (*it)[3]);  
 			
 			 if(std::abs(pt2.x-pt1.x)<=300&&std::abs(pt1.y-pt2.y)>=200&&pt1.y>=500&&pt2.y>=500){
-				//line(result,pt1,pt2,Scalar(0,255,0),3);
 				bool is_exist=false;
 				for(int i=0;i<verti.size();i+=2){
 					if (pt1.x-verti[i].x<=100){
@@ -397,15 +441,13 @@ int videoview::threadDetect(Mat frame)
 				    else{
 					    verti.push_back(pt1);verti.push_back(pt2);
 				    }
-				//line(frame,pt1,pt2,Scalar(0,0,255));
 			    }
 			}
             it++;  
         }
-	  //finder.drawDetectedLines(frame);  
-	  image1=Mat2QImage(gray);
-	 image1 = image1.scaled(ui.label_3->size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-     ui.label_3->setPixmap(QPixmap::fromImage(image1));
+	  //image1=Mat2QImage(gray);
+	 //image1 = image1.scaled(ui.label_3->size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    // ui.label_3->setPixmap(QPixmap::fromImage(image1));
 
 	return 0;
 }
@@ -425,14 +467,41 @@ void videoview::on_cross_lane_clicked(void)
 
 void videoview::savetodb_illegal(Mat img,QString url,QString type)
 {
-	QDateTime current_date_time =QDateTime::currentDateTime();
-	url=url+current_date_time.toString("yyyyMMddhhmmss")+".jpg";
-	QString date=current_date_time.toString("yyyy-MM-dd hh:mm:ss");
-	imwrite("F://大创/" + url.toStdString(), img);
-	db.exec("INSERT INTO illegals (license_id,url,time,type) VALUES('12345','"+url+"','"+date+"','"+type+"')");
-	QString instruct = "INSERT INTO illegals (license_id,url,time,type) VALUES('12345','" + url + "','" + date + "','" + type + "')";
-	QMessageBox qmb;
-	qmb.warning(this, "",instruct , QMessageBox::Yes);
+	QDateTime current_date_time = QDateTime::currentDateTime();
+	QString date = current_date_time.toString("yyyy-MM-dd hh:mm:ss");
+	std::string name = current_date_time.toString("yyyyMMddhhmmss").toStdString() + ".jpg";
+	imwrite("../" + url.toStdString() + name, img);
+	//string pre = "python F://dachuang/lic_re/PR.py ";
+	//const char *com = (pre + "F:/monitor/" + url.toStdString() + name).c_str();
+	//printf("%s\n", com);
+	bool is_fail = false;
+	//FILE *fp;
+	//fp = _popen(com, "r");
+	/*if (fp == NULL) {
+
+		is_fail = true;
+		printf("%s\n", "fail");
+
+	}
+	_pclose(fp);*/
+    //ifstream fin("F://dachuang/lic_re/rere.txt");
+	string nResult;
+	//if (!is_fail) {
+		//getline(fin, nResult);
+	//}
+	//else {
+		nResult = "00000";
+	//}
+	//getline(fin, nResult);
+	//std::cout << nResult.size();
+	//fin.close();
+	mf.upload(url.toStdString(), name);
+	url = url + current_date_time.toString("yyyyMMddhhmmss") + ".jpg";
+	QString l = QString::fromStdString(nResult);
+	db.exec("INSERT INTO illegals (license_id,picture_url,action_time,action_type) VALUES('" + l + "','" +url+"','"+date+"','"+type+"')");
+	//QString instruct = "INSERT INTO illegals (license_id,picture_url,action_time,action_type) VALUES('12345','" + url + "','" + date + "','" + type + "')";
+	//QMessageBox qmb;
+	//qmb.warning(this, "",instruct , QMessageBox::Yes);
 
 }
 
@@ -448,7 +517,7 @@ int videoview::savetodb_line(Point point1, Point point2)
 }
 
 
-void videoview::on_change_light_clicked()
+/*void videoview::on_change_light_clicked()
 {
 	if (red_light == false) {
 		ui.change_light->setText(QStringLiteral("设置为绿灯"));
@@ -458,5 +527,26 @@ void videoview::on_change_light_clicked()
 		ui.change_light->setText(QStringLiteral("设置为红灯"));
 		red_light = false;
 	}
+	
+}*/
+
+void videoview::on_light_kind_changed()
+{
+	light_state = ui.light_kind->currentIndex();
+	switch (light_state) {
+	case 0:
+		lightstatus = "pass";
+		break;
+	case 1:
+		lightstatus = "straight permitted";
+		break;
+	case 2:
+		lightstatus = "left permitted";
+		break;
+	case 3:
+		lightstatus = "fobidden";
+		break;
+	}
+
 	
 }

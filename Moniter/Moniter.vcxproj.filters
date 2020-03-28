@@ -39,6 +39,12 @@
     <ClCompile Include="linefinder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="carObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="myftp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="videoview.h">
@@ -57,6 +63,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linefinder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="carObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="myftp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -13,6 +13,7 @@
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
@@ -30,7 +31,8 @@ public:
     QLabel *label_3;
     QPushButton *lane_finder;
     QPushButton *cross_lane;
-    QPushButton *change_light;
+    QComboBox *light_kind;
+    QLabel *label_4;
 
     void setupUi(QWidget *videoviewClass)
     {
@@ -48,21 +50,25 @@ public:
         calculate_cars->setGeometry(QRect(980, 770, 101, 31));
         label_2 = new QLabel(videoviewClass);
         label_2->setObjectName(QStringLiteral("label_2"));
-        label_2->setGeometry(QRect(40, 20, 1031, 601));
+        label_2->setGeometry(QRect(30, 20, 1031, 601));
         label_3 = new QLabel(videoviewClass);
         label_3->setObjectName(QStringLiteral("label_3"));
-        label_3->setGeometry(QRect(40, 670, 351, 211));
+        label_3->setGeometry(QRect(80, 650, 351, 211));
         lane_finder = new QPushButton(videoviewClass);
         lane_finder->setObjectName(QStringLiteral("lane_finder"));
         lane_finder->setGeometry(QRect(980, 810, 101, 31));
         cross_lane = new QPushButton(videoviewClass);
         cross_lane->setObjectName(QStringLiteral("cross_lane"));
         cross_lane->setGeometry(QRect(980, 850, 101, 31));
-        change_light = new QPushButton(videoviewClass);
-        change_light->setObjectName(QStringLiteral("change_light"));
-        change_light->setGeometry(QRect(870, 790, 93, 28));
+        light_kind = new QComboBox(videoviewClass);
+        light_kind->setObjectName(QStringLiteral("light_kind"));
+        light_kind->setGeometry(QRect(870, 750, 101, 31));
+        label_4 = new QLabel(videoviewClass);
+        label_4->setObjectName(QStringLiteral("label_4"));
+        label_4->setGeometry(QRect(870, 730, 72, 15));
 
         retranslateUi(videoviewClass);
+        QObject::connect(light_kind, SIGNAL(currentIndexChanged(int)), videoviewClass, SLOT(on_light_kind_changed()));
 
         QMetaObject::connectSlotsByName(videoviewClass);
     } // setupUi
@@ -77,7 +83,14 @@ public:
         label_3->setText(QString());
         lane_finder->setText(QApplication::translate("videoviewClass", "\350\275\246\351\201\223\346\243\200\346\265\213", Q_NULLPTR));
         cross_lane->setText(QApplication::translate("videoviewClass", "\344\270\215\346\214\211\350\275\246\351\201\223\350\241\214\351\251\266", Q_NULLPTR));
-        change_light->setText(QApplication::translate("videoviewClass", "\350\256\276\347\275\256\344\270\272\347\272\242\347\201\257", Q_NULLPTR));
+        light_kind->clear();
+        light_kind->insertItems(0, QStringList()
+         << QApplication::translate("videoviewClass", "\345\217\257\351\200\232\350\241\214", Q_NULLPTR)
+         << QApplication::translate("videoviewClass", "\344\273\205\345\217\257\347\233\264\350\241\214", Q_NULLPTR)
+         << QApplication::translate("videoviewClass", "\344\273\205\345\217\257\345\267\246\350\275\254", Q_NULLPTR)
+         << QApplication::translate("videoviewClass", "\344\270\215\345\217\257\351\200\232\350\241\214", Q_NULLPTR)
+        );
+        label_4->setText(QApplication::translate("videoviewClass", "\351\200\232\350\241\214\347\212\266\346\200\201", Q_NULLPTR));
     } // retranslateUi
 
 };
