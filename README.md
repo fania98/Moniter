@@ -17,7 +17,7 @@
 
 ## 当前问题：
 1. 红灯时，车辆右转并不违反交通规则，程序不能体现这一点
-2. 精确度较低，漏测、误测情况普遍。
+2. 精确度较低。
 
 ## 程序截图演示
 ![image](https://github.com/fania98/Moniter/blob/master/pic/show.JPG)
